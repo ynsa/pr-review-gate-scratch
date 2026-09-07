@@ -1,0 +1,27 @@
+name: post-check
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      sha:
+        required: true
+      check_name:
+        required: false
+        default: claude-review
+permissions:
+  checks: write
+  contents: read
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post check run as GitHub App
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.inputs.sha || github.event.pull_request.head.sha }}
+          CHECK_NAME: ${{ github.event.inputs.check_name || 'claude-review' }}
+        run: |
+          gh api --method POST /repos/${{ github.repository }}/check-runs \
+            -f name="$CHECK_NAME" -f head_sha="$SHA" -f status=completed \
+            -f conclusion=success -f output[title]="AI review" \
+            -f output[summary]="scratch gate experiment" --jq '{id,name,app_id:.app.id,app_slug:.app.slug,started:.started_at,completed:.completed_at}'
