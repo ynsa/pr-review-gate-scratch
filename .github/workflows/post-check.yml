@@ -8,6 +8,9 @@ on:
       check_name:
         required: false
         default: claude-review
+      conclusion:
+        required: false
+        default: success
 permissions:
   checks: write
   contents: read
@@ -20,8 +23,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SHA: ${{ github.event.inputs.sha || github.event.pull_request.head.sha }}
           CHECK_NAME: ${{ github.event.inputs.check_name || 'claude-review' }}
+          CONCLUSION: ${{ github.event.inputs.conclusion || 'success' }}
         run: |
           gh api --method POST /repos/${{ github.repository }}/check-runs \
             -f name="$CHECK_NAME" -f head_sha="$SHA" -f status=completed \
-            -f conclusion=success -f output[title]="AI review" \
-            -f output[summary]="scratch gate experiment" --jq '{id,name,app_id:.app.id,app_slug:.app.slug,started:.started_at,completed:.completed_at}'
+            -f conclusion="$CONCLUSION" -f output[title]="AI review" \
+            -f output[summary]="scratch gate experiment" --jq '{id,name,conclusion,app_id:.app.id}'
